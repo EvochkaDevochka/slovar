@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Электронный словарь</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .user-words {
+            margin-top: 20px;
+        }
+        .user-words h2 {
+            font-size: 1.2em;
+        }
+        .add-to-dictionary {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 id="title">Словарь специальной лексики гостиничного бизнеса</h1>
+    <select id="languageSelector" onchange="changeLanguage()">
+        <option value="ru">Русский</option>
+        <option value="en">English</option>
+    </select>
+    
+    <input type="text" id="wordInput" placeholder="Введите слово...">
+    <button id="searchButton" onclick="searchWord()">Поиск</button>
+    
+    <div class="result" id="result" style="display:none;">
+        <p id="definition"></p>
+        <button id="addToDictionaryButton" class="add-to-dictionary" style="display:none;" onclick="addToUserDictionary()">Добавить в словарик</button>
+    </div>
+
+    <h2 id="addWordLabel">Добавить новое слово</h2>
+    <input type="text" id="newWord" placeholder="Новое слово">
+    <input type="text" id="newDefinition" placeholder="Определение слова">
+    <button id="addButton" onclick="addWord()">Добавить слово</button>
+
+    <div class="user-words">
+        <h2 id="myWordsLabel">Мои слова:</h2>
+        <ul id="wordsList"></ul>
+    </div>
+</div>
+
+<script>
+    const dictionaries = {
+    "ru": {
+        "обслуживание": {
+            "definition": "Обслуживание (сущ)",
+            "englishEquivalent": "- это комплекс услуг, предоставляемый гостям отеля",
+            "grammaticalNote": "Service",
+            "le": "термин",
+            "example1": "Этот отель предоставляет высокое качество обслуживания.",
+            "example2": "Мне понравилось обслуживание в этом отеле."
+},
+        "гость": {
+            "definition": "Гость (сущ)",
+            "englishEquivalent": "- это вежливое обращение к посетителям гостиницы.",
+            "grammaticalNote": "Guest",
+            "le": "термин",
+            "example1": "В первый день пребывания каждый гость нашего отеля может получить приветсвенный напиток.",
+            "example2": "Мы предоставляем лучший сервис для гостей нашего отеля."
+        },
+        "гостеприимство": {
+            "definition": "Гостеприимство (сущ)",
+            "englishEquivalent": "- это доброжелательное обращение к гостям с целью сделать их прибывание в отеле более комфортным.",
+            "grammaticalNote": "Hospitality",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Гостеприимство — одна из важнейших черт нашей культуры."
+        },
+        "персонал": {
+            "definition": "Сотрудники, работающие в организации.",
+            "englishEquivalent": "Staff",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Персонал отеля всегда рад помочь."
+        },
+        "размещение": {
+            "definition": "Процесс размещения людей на временное жилье.",
+            "englishEquivalent": "Accommodation",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Размещение туристов происходит в уютных отелях."
+        },
+        "сервис": {
+            "definition": "Услуга, предоставляемая клиенту.",
+            "englishEquivalent": "Service",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Сервис в этом ресторане на высшем уровне."
+        },
+        "туристы": {
+            "definition": "Люди, путешествующие для отдыха или изучения.",
+            "englishEquivalent": "Tourists",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Туристы наслаждаются красотами города."
+        },
+        "посетитель": {
+            "definition": "Человек, который приходит в какое-либо место.",
+            "englishEquivalent": "Visitor",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Посетители могут ознакомиться с историей музея."
+        },
+        "удовлетворенность": {
+            "definition": "Состояние удовлетворенного человека.",
+            "englishEquivalent": "Satisfaction",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Удовлетворенность клиентов важна для бизнеса."
+        },
+        "бронирование": {
+            "definition": "Процесс резервирования услуги или места.",
+            "englishEquivalent": "Booking",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Бронирование номера должно быть сделано заранее."
+        },
+        "контроль качества": {
+            "definition": "Процесс обеспечения качества услуг.",
+            "englishEquivalent": "Quality Surveillance",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Контроль качества — важная часть работы компании."
+        },
+        "поставщик": {
+            "definition": "Организация, поставляющая товары или услуги.",
+            "englishEquivalent": "Supplier",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Поставщик гарантирует высокое качество продукции."
+        },
+        "услуга": {
+            "definition": "Действие, полезное для клиента.",
+            "englishEquivalent": "Service",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Услуга проката автомобилей доступна в аэропорту."
+        },
+        "сезонность": {
+            "definition": "Зависимость от времени года.",
+            "englishEquivalent": "Seasonality",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Сезонность влияет на спрос на гостиничные услуги."
+        },
+        "загруженность": {
+            "definition": "Степень занятности или нагрузки.",
+            "englishEquivalent": "Workload",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Загруженность отеля в разгар сезона возрастает."
+        },
+        "занятость": {
+            "definition": "Состояние занятости человека.",
+            "englishEquivalent": "Occupation",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Занятость населения влияет на экономику."
+        },
+        "звездность": {
+            "definition": "Уровень качества услуг, оцененный в звездах.",
+            "englishEquivalent": "The Star Rating",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Звездность отеля определяет его стоимость."
+        },
+        "клиентоориентированность": {
+            "definition": "Сосредоточенность бизнеса на потребностях клиента.",
+            "englishEquivalent": "Client Orientation",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Клиентоориентированность помогает улучшить сервис."
+        },
+        "контингент": {
+            "definition": "Группа людей, собирающихся вместе.",
+            "englishEquivalent": "The Contingent",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Контингент участников конференции был разнообразным."
+        },
+        "межсезонье": {
+            "definition": "Период между сезонами.",
+            "englishEquivalent": "Off-season",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Межсезонье — отличное время для путешествий."
+        },
+        "самообслуживание": {
+            "definition": "Процесс, при котором люди обслуживают себя сами.",
+            "englishEquivalent": "Self-service",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "В кафе предусмотрено самообслуживание."
+        },
+        "спрос": {
+            "definition": "Количество потребностей на рынке.",
+            "englishEquivalent": "Demand",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Спрос на услуги вырос в этом году."
+        },
+        "зонирование": {
+            "definition": "Разделение территории на зоны.",
+            "englishEquivalent": "Zoning",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Зонирование помогает организовать пространство."
+        },
+        "платные услуги": {
+            "definition": "Услуги, за которые взимается плата.",
+            "englishEquivalent": "Paid Services",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Платные услуги включают массаж и спа."
+        },
+        "постоялец": {
+            "definition": "Человек, который останавливается в гостинице.",
+            "englishEquivalent": "The Guest",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Постоялец может заказать завтрак в номер."
+        },
+        "удобства": {
+            "definition": "Комфортные условия для гостей.",
+            "englishEquivalent": "Conveniences",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "В отеле есть все необходимые удобства."
+        },
+        "питание": {
+            "definition": "Предоставление пищи.",
+            "englishEquivalent": "Meals",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Завтрак включен в стоимость номера."
+        },
+        "трансфер": {
+            "definition": "Транспортировка гостей из одного места в другое.",
+            "englishEquivalent": "Shuttle",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Трансфер из аэропорта бесплатный."
+        },
+        "окупаемость": {
+            "definition": "Период, за который вложения окупаются.",
+            "englishEquivalent": "Payback",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Окупаемость проекта составляет три года."
+        },
+        "койко-место": {
+            "definition": "Место для сна в гостинице.",
+            "englishEquivalent": "A Bed Place",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Гостиница предлагает койко-места по доступным ценам."
+        },
+        "номерной фонд": {
+            "definition": "Общее количество номеров в отеле.",
+            "englishEquivalent": "Room Stock",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Номерной фонд отеля состоит из 100 комнат."
+        },
+        "аннуляционный срок": {
+            "definition": "Период, в течение которого можно отменить бронь.",
+            "englishEquivalent": "Cancellation Period",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Аннуляционный срок составляет 24 часа."
+        },
+        "расчетный час": {
+            "definition": "Время, когда требуется освободить номер.",
+            "englishEquivalent": "Check-out Time",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Расчетный час в отеле — 12:00."
+        },
+        "бронь": {
+            "definition": "Подтверждение бронирования номера или услуги.",
+            "englishEquivalent": "Booking",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Бронь необходимо подтвердить за сутки."
+        },
+        "должностная инструкция": {
+            "definition": "Документ, описывающий обязанности сотрудников.",
+            "englishEquivalent": "Duty Regulations",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Должностная инструкция помогает сотрудникам понять свои обязанности."
+        },
+        "заезд": {
+            "definition": "Прибытие клиента в гостиницу.",
+            "englishEquivalent": "Check-in",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Заезд в отель начинается с 14:00."
+        },
+        "выезд": {
+            "definition": "Уход клиента из гостиницы.",
+            "englishEquivalent": "Check-out",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Выезд из отеля должен происходить до 12:00."
+        },
+        "время пребывания": {
+            "definition": "Период, в течение которого клиент проживает в гостинице.",
+            "englishEquivalent": "Time of Stay",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Время пребывания может быть изменено по запросу."
+        },
+        "сезон": {
+            "definition": "Период года, характеризующийся определенными климатическими условиями.",
+            "englishEquivalent": "Season",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Сезон туризма начинается весной."
+        },
+        "мёртвый сезон": {
+            "definition": "Период, когда туристический поток минимален.",
+            "englishEquivalent": "Low Season",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Мёртвый сезон — хорошее время для дешевых поездок."
+        },
+        "пик сезона": {
+            "definition": "Время наибольшего наплыва туристов.",
+            "englishEquivalent": "High Season",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "В пик сезона все номера заняты."
+        },
+        "волкин": {
+            "definition": "Ситуация, когда клиент был зарезервирован, но номер не готов.",
+            "englishEquivalent": "Walking",
+            "grammaticalNote": "Глагол",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Отель считается волкингом, если номера не готовы."
+        },
+        "зачекинить": {
+            "definition": "Процесс регистрации клиента в отеле.",
+            "englishEquivalent": "To Check In",
+            "grammaticalNote": "Глагол",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Не забудьте зачекинить ваш номер!"
+        },
+        "клинить": {
+            "definition": "Убрать или очистить номер.",
+            "englishEquivalent": "To Clean",
+            "grammaticalNote": "Глагол",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Клининговая служба клинит номера после выезда гостей."
+        },
+        "зашерить гостя": {
+            "definition": "Поделиться информацией о госте между сотрудниками.",
+            "englishEquivalent": "To Share Guest Info",
+            "grammaticalNote": "Глагол",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Необходимо зашерить гостя с другими отделами."
+        },
+        "постить": {
+            "definition": "Размещать информацию или сообщения.",
+            "englishEquivalent": "To Post",
+            "grammaticalNote": "Глагол",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Менеджер будет постить новости в соцсетях."
+        },
+        "апгрейдить": {
+            "definition": "Улучшить или обновить услуги.",
+            "englishEquivalent": "To Upgrade",
+            "grammaticalNote": "Глагол",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Можно апгрейдить номер за дополнительную плату."
+        },
+        "доска": {
+            "definition": "Поверхность для записи или отображения информации.",
+            "englishEquivalent": "Board",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "На доске можно найти внутренние объявления."
+        },
+        "заселить по рэку": {
+            "definition": "Заселить клиента в номер по заранее установленным стандартам.",
+            "englishEquivalent": "To Assign by Rack Rate",
+            "grammaticalNote": "Глагол",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Клиент будет заселен по рэку."
+        },
+        "джоинить": {
+            "definition": "Контактировать или присоединяться к группе.",
+            "englishEquivalent": "To Join",
+            "grammaticalNote": "Глагол",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Всем участникам стоит джоинить группу."
+        },
+        "экстра": {
+            "definition": "Дополнительная услуга или предмет.",
+            "englishEquivalent": "Extra",
+            "grammaticalNote": "Прилагательное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "За экстра услуги может взиматься плата."
+        },
+        "будильник": {
+            "definition": "Следуя стандартам работы.",
+            "englishEquivalent": "By Wake-up Call",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Гостям в нашем отеле предоставляется сервис по вэйкапу."
+        },
+        "экспресс": {
+            "definition": "Быстрый сервис или доставка.",
+            "englishEquivalent": "Express",
+            "grammaticalNote": "Прилагательное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Экспресс-завтрак доступен для ранних выездов."
+        },
+        "ночник": {
+            "definition": "Настольная лампа для освещения в ночное время.",
+            "englishEquivalent": "Nightlight",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "У нас есть ночник для удобства гостей."
+        },
+        "чай": {
+            "definition": "Напиток, получаемый из высушенных листьев.",
+            "englishEquivalent": "Tea",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Чай предлагается на завтрак."
+        },
+        "ручка": {
+            "definition": "Предмет для письма.",
+            "englishEquivalent": "Pen",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Каждый гость получает ручку для заполнения анкет."
+        },
+        "ножка": {
+            "definition": "Часть стула или стола, поддерживающая конструкцию.",
+            "englishEquivalent": "Leg",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Ножка стола сломана."
+        },
+        "лицо": {
+            "definition": "Часть человеческого тела, на которой находятся глаза, нос и рот.",
+            "englishEquivalent": "Face",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "На лице гостя написано довольство."
+        },
+        "средняя загрузка": {
+            "definition": "Уровень занятости гостиницы за определенный период.",
+            "englishEquivalent": "Bed Occupancy",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Средняя загрузка отеля составляет 75%."
+        },
+        "поздний выезд": {
+            "definition": "Возможность покинуть гостиницу позже стандартного времени.",
+            "englishEquivalent": "Late Check-out",
+            "grammaticalNote": "Существительное",
+            "le": "термин",
+            "example1": "Гостеприимство — одна из важнейших черт нашей культуры.",
+            "example2": "Поздний выездPossible by request."
+        }
+    },
+    "en": {
+        "programming": {
+            "definition": "The process of creating software.",
+            "englishEquivalent": "Programming",
+            "grammaticalNote": "Noun",
+            "example": "Programming is a valuable skill."
+        }
+    }
+};
+  let currentLanguage = 'ru';
+    let currentSearchedWord = '';
+
+    // Загрузка пользовательских слов из localStorage
+    function loadUserWords() {
+        const savedWords = JSON.parse(localStorage.getItem('userWords')) || {};
+        return savedWords;
+    }
+
+    // Функция добавления нового слова
+    function addWord() {
+        const newWord = document.getElementById('newWord').value.trim();
+        const newDefinition = document.getElementById('newDefinition').value.trim();
+
+        if (newWord && newDefinition) {
+            const userWords = loadUserWords();
+            // Сохраняем определение в поле 'definition'
+            userWords[normalizeWord(newWord)] = {
+                word: newWord, // Сохраняем само слово
+                definition: newDefinition
+            };
+            localStorage.setItem('userWords', JSON.stringify(userWords));
+            document.getElementById('newWord').value = '';
+            document.getElementById('newDefinition').value = '';
+            displayUserWords();
+            alert(`Слово "${newWord}" добавлено в ваш словарик.`);
+        } else {
+            alert('Пожалуйста, введите слово и его определение.');
+        }
+    }
+
+    // Функция добавления слова в словарик
+    function addToUserDictionary() {
+        if (!currentSearchedWord) {
+            alert('Сначала найдите слово, которое хотите добавить.');
+            return;
+        }
+
+        const userWords = loadUserWords();
+        const normalizedSearchedWord = normalizeWord(currentSearchedWord);
+
+        // Проверяем, что слово найдено в словаре или уже есть в пользовательском словаре
+        const wordInfo = dictionaries[currentLanguage][normalizedSearchedWord];
+        const userWordInfo = userWords[normalizedSearchedWord];
+
+        if (wordInfo || userWordInfo) {
+            // Добавляем или обновляем слово в пользовательском словаре
+            userWords[normalizedSearchedWord] = wordInfo || userWordInfo; // Используем данные из основного словаря, если есть, иначе из пользовательского
+
+            localStorage.setItem('userWords', JSON.stringify(userWords));
+            displayUserWords();
+            alert(`Слово "${currentSearchedWord}" добавлено в ваш словарик.`);
+        } else {
+            alert('Слово не найдено в словаре.');
+        }
+    }
+
+    // Функция отображения пользовательских слов
+    function displayUserWords() {
+        const userWords = loadUserWords();
+        const wordsList = document.getElementById('wordsList');
+        wordsList.innerHTML = '';
+        for (const [word, wordInfo] of Object.entries(userWords)) {
+            const li = document.createElement('li');
+            // Отображаем определение из поля 'definition'
+            li.textContent = `${word}: ${wordInfo.definition || 'Определение отсутствует'}`;
+            wordsList.appendChild(li);
+        }
+    }
+
+    function normalizeWord(word) {
+        return word.toLowerCase()
+                   .normalize("NFD")
+                   .replace(/[\u0300-\u036f]/g, "");
+    }
+
+    // Функция для преобразования английских символов в русские (упрощенная)
+    function qwertyToCyrillic(input) {
+        const qwertyMap = {
+            'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ', 'a': 'ф',
+            's': 'ы', 'd': 'в', 'f': 'а', 'g': 'п', 'h': 'р', 'j': 'о', 'k': 'л', 'l': 'д', ';': 'ж', "'": 'э', 'z': 'я',
+            'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и', 'n': 'т', 'm': 'ь', ',': 'б', '.': 'ю', '/': '.',
+            ' ': ' ' // Добавляем пробел
+        };
+        let transliterated = '';
+        for (let char of input) {
+            transliterated += qwertyMap[char] || char;
+        }
+        return transliterated;
+    }
+
+    function searchWord() {
+    const inputRaw = document.getElementById('wordInput').value;    
+    const inputWord = normalizeWord(inputRaw);
+
+    // Проверка на случай, если пользователь ввел слово на английской раскладке
+    const transformedWord = qwertyToCyrillic(inputWord);
+    currentSearchedWord = dictionaries[currentLanguage][transformedWord] ? transformedWord : inputWord;
+
+    // Дальнейшая обработка
+    const resultDiv = document.getElementById('result');
+    const definition = document.getElementById('definition');
+    const addToDictionaryButton = document.getElementById('addToDictionaryButton');
+
+    const userWords = loadUserWords();
+    const normalizedDictionary = { ...dictionaries[currentLanguage], ...userWords };
+
+    // Проверка только с учетом преобразованного слова
+    if (normalizedDictionary[currentSearchedWord]) {
+        const wordInfo = normalizedDictionary[currentSearchedWord];
+        definition.innerHTML = `
+            <strong>${wordInfo.definition}</strong><br>
+            ${wordInfo.englishEquivalent}<br>
+            Английский эквивалент: <strong>${wordInfo.grammaticalNote}</strong><br>
+            Вид СП: <strong>${wordInfo.le}</strong><br>
+            Примеры использования: <br><ol><li>${wordInfo.example1}</li><br>
+            <li>${wordInfo.example2}</li></ol><br>
+        `;
+        resultDiv.style.display = 'block';
+        addToDictionaryButton.style.display = 'block';
+    } else {
+        definition.textContent = 'Слово не найдено в словаре.';
+        addToDictionaryButton.style.display = 'none';
+        resultDiv.style.display = 'block';
+    }
+}
+
+    function changeLanguage() {
+        const selectedLanguage = document.getElementById('languageSelector').value;
+        currentLanguage = selectedLanguage;
+
+        // Обновление текстов на странице в зависимости от языка
+        if (currentLanguage === 'en') {
+            document.getElementById('title').innerText = 'Electronic Dictionary';
+            document.getElementById('wordInput').placeholder = 'Enter a word...';
+            document.getElementById('searchButton').innerText = 'Search';
+            document.getElementById('addWordLabel').innerText = 'Add New Word';
+            document.getElementById('newWord').placeholder = 'New word';
+            document.getElementById('newDefinition').placeholder = 'Word definition';
+            document.getElementById('addButton').innerText = 'Add Word';
+            document.getElementById('myWordsLabel').innerText = 'My Words:';
+            document.getElementById('addToDictionaryButton').innerText = 'Add to Dictionary';
+        } else {
+            document.getElementById('title').innerText = 'Электронный словарь';
+            document.getElementById('wordInput').placeholder = 'Введите слово...';
+            document.getElementById('searchButton').innerText = 'Поиск';
+            document.getElementById('addWordLabel').innerText = 'Добавить новое слово';
+            document.getElementById('newWord').placeholder = 'Новое слово';
+            document.getElementById('newDefinition').placeholder = 'Определение слова';
+            document.getElementById('addButton').innerText = 'Добавить слово';
+            document.getElementById('myWordsLabel').innerText = 'Мои слова:';
+            document.getElementById('addToDictionaryButton').innerText = 'Добавить в словарик';
+        }
+
+        // Перерисовать список пользовательских слов (хотя они не локализованы)
+        displayUserWords();
+        // Скрыть результат поиска при смене языка
+        document.getElementById('result').style.display = 'none';
+        document.getElementById('wordInput').value = '';
+        currentSearchedWord = '';
+    }
+
+    // Инициализация страницы
+    displayUserWords();
+</script>
+
+</body>
+</html>
