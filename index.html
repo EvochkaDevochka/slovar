@@ -79,7 +79,7 @@
     
     <div class="result" id="result" style="display:none;">
         <p id="definition"></p>
-        <button id="addToDictionaryButton" class="add-to-dictionary" style="display:none;" onclick="addToUserDictionary()">Добавить в словарик</button>
+        <button id="addToDictionaryButton" class="add-to-dictionary" style="display:none;" onclick="addToUserDictionary()">Добавить в мои слова</button>
     </div>
 
     <h2 id="addWordLabel">Добавить новое слово</h2>
@@ -112,7 +112,7 @@
  <h2>И/Й</h2>
  <p>интеграция</p>
  <h2>К</h2>
- <p>каналы/каналы бронирования, клиентоориентированность, клинить, клины, койко-место, контингент, контрагент, контроль качества, кролики</p>
+ <p>каналы/каналы бронирования, клиентоориентированность, клинить, койко-место, контингент, контрагент, контроль качества, кролики</p>
  <h2>Л</h2>
  <p>лицо, лягушка</p>
  <h2>М</h2>
@@ -120,7 +120,7 @@
  <h2>Н</h2>
  <p>некурящий номер, номер в стопе, ножка, номерной фонд, ночник</p>
  <h2>О</h2>
- <p>обслуживание, овербукинг, окупаемость, остаток</p>
+ <p>обслуживание, овербукинг, окно, окупаемость, остаток</p>
  <h2>П</h2>
  <p>персонал, пик сезона, питание, платные услуги, поздний выезд, пользователь, поставщик, посетитель, постить, постоялец, почасовые объекты, предоплата</p>
  <h2>Р</h2>
@@ -594,13 +594,13 @@
            "exampleengl": "We can check in walk-ins if there are available rooms.",
            "ssylka": "гость, постоялец, посетитель, пользователь"
   },
-         "клины": {
-           "slovo": "Клины (сущ.) –",
-           "definition": "чистые номера.",
-           "examplerus": "Мы заселяем гостей только в клины.",
-           "english": "clean rooms",
-           "exampleengl": "Only clean rooms are available for checking in.",
-           "ssylka": "–"
+         "окно": {
+           "slovo": "Окно (сущ.) –",
+           "definition": "свободное место между бронями в пределах одного дня.",
+           "examplerus": "Мы всегда оставляем окна, чтобы наш персонал успевал убрать в номерах",
+           "english": "opening",
+           "exampleengl": "An opening helps stuff to preapre for new guests.",
+           "ssylka": "остаток, дырка"
   },
          "лягушка": {
            "slovo": "Лягушка (сущ.) –",
@@ -921,7 +921,7 @@
             document.getElementById('newWord').value = '';
             document.getElementById('newDefinition').value = '';
             displayUserWords();
-            alert(`Слово "${newWord}" добавлено в ваш словарик.`);
+            alert(`Слово "${newWord}" добавлено в ваши слова.`);
         } else {
             alert('Пожалуйста, введите слово и его определение.');
         }
@@ -950,7 +950,7 @@
 
   localStorage.setItem('userWords', JSON.stringify(userWords));
   displayUserWords();
-  alert(`Слово "${currentSearchedWord}" добавлено в ваш словарик.`);
+  alert(`Слово "${currentSearchedWord}" добавлено в ваши слова.`);
 }
 
     function displayUserWords() {
